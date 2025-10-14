@@ -1,0 +1,25 @@
+# Default configuration for the ReasoningBank library
+
+# Memory backend settings
+memory:
+  # The type of memory backend to use. Options: "chroma", "json"
+  backend: "chroma"
+
+  # Settings for the ChromaDB backend
+  chroma:
+    collection_name: "reasoning_bank"
+
+  # Settings for the JSON backend
+  json:
+    filepath: "memory.json"
+
+# Embedding model settings
+embedding_model:
+  # The name of the sentence-transformer model to use.
+  model_name: "all-MiniLM-L6-v2"
+
+# LLM settings
+llm:
+  # The type of LLM to use. This is a placeholder for a more complex configuration.
+  # In a real application, this would contain settings for the specific LLM provider.
+  provider: "langchain.llms.Fake"

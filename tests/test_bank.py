@@ -1,39 +1,53 @@
 import unittest
-from unittest.mock import MagicMock
-from reasoningbank.bank import ReasoningBank
-from reasoningbank.memory import JSONMemoryBackend
+from unittest.mock import MagicMock, patch
+from reasoningbank.core.bank import ReasoningBank
 import os
+import numpy as np
+
 
 class TestReasoningBank(unittest.TestCase):
 
-    def setUp(self):
+    @patch("reasoningbank.core.bank.load_config")
+    def setUp(self, mock_load_config):
+        # Mock the configuration
+        mock_load_config.return_value = {
+            "memory": {"backend": "json", "json": {"filepath": "test_memory.json"}},
+            "embedding_model": {"model_name": "all-MiniLM-L6-v2"},
+            "llm": {"provider": "langchain.llms.Fake"},
+        }
+
         # Mock dependencies
         self.mock_memory_backend = MagicMock()
+        with patch(
+            "reasoningbank.core.bank.JSONMemoryBackend",
+            return_value=self.mock_memory_backend,
+        ):
+            self.bank = ReasoningBank(config_path="dummy_config.yaml")
 
         self.mock_embedding_model = MagicMock()
 
         def mock_encode(input_data):
-            if isinstance(input_data, list): # For test_add_experience_success
-                return [[0.1, 0.2]]
-            elif isinstance(input_data, str): # For test_retrieve_memories
-                return [0.3, 0.4]
+            if isinstance(input_data, list):  # For test_add_experience_success
+                return np.array([[0.1, 0.2]])
+            elif isinstance(input_data, str):  # For test_retrieve_memories
+                return np.array([0.3, 0.4])
             return None
 
         self.mock_embedding_model.encode.side_effect = mock_encode
+        self.bank.embedding_model = self.mock_embedding_model
 
         self.mock_llm = MagicMock()
+        self.bank.llm = self.mock_llm
 
-        self.bank = ReasoningBank(
-            memory_backend=self.mock_memory_backend,
-            embedding_model=self.mock_embedding_model,
-            llm=self.mock_llm
-        )
+    def tearDown(self):
+        if os.path.exists("test_memory.json"):
+            os.remove("test_memory.json")
 
     def test_add_experience_success(self):
         # Configure the mock LLM to simulate a successful trajectory
         self.mock_llm.invoke.side_effect = [
             "Success",  # First call for judging
-            '[{"title": "t1", "description": "d1", "content": "c1"}]'  # Second call for distilling
+            '[{"title": "t1", "description": "d1", "content": "c1"}]',  # Second call for distilling
         ]
 
         self.bank.add_experience("some trajectory", "some query")
@@ -67,5 +81,6 @@ class TestReasoningBank(unittest.TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["title"], "retrieved_title")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

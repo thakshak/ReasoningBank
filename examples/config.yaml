@@ -1,0 +1,12 @@
+# Example configuration for the ReasoningBank library
+
+memory:
+  backend: "json"
+  json:
+    filepath: "example_memory.json"
+
+embedding_model:
+  model_name: "all-MiniLM-L6-v2"
+
+llm:
+  provider: "langchain.llms.Fake"

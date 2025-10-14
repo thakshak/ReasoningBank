@@ -1,0 +1,7 @@
+chromadb
+sentence-transformers
+langchain
+numpy
+scikit-learn
+PyYAML
+langchain-community
