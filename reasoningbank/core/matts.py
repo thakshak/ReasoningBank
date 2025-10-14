@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any
 from .bank import ReasoningBank
 from .agent import format_memories_for_prompt, create_agent_executor
 
@@ -6,10 +6,14 @@ from .agent import format_memories_for_prompt, create_agent_executor
 # In a real implementation, this would be a proper agent class or function.
 AgentExecutor = Any
 
-def parallel_scaling(query: str, k: int, reasoning_bank: ReasoningBank, agent_executor: AgentExecutor) -> str:
+
+def parallel_scaling(
+    query: str, k: int, reasoning_bank: ReasoningBank, agent_executor: AgentExecutor
+) -> str:
     """
     Implements parallel scaling MaTTS.
-    Generates k trajectories in parallel, learns from them, and synthesizes a final answer.
+    Generates k trajectories in parallel, learns from them, and synthesizes a
+    final answer.
     """
     # 1. Retrieve initial memories to guide the parallel generation.
     initial_memories = reasoning_bank.retrieve_memories(query, k=1)
@@ -19,7 +23,9 @@ def parallel_scaling(query: str, k: int, reasoning_bank: ReasoningBank, agent_ex
     # In a real implementation, this could be done with asyncio or threading.
     trajectories = []
     for _ in range(k):
-        result = agent_executor.invoke({"memories": formatted_memories, "query": query})
+        result = agent_executor.invoke(
+            {"memories": formatted_memories, "query": query}
+        )
         trajectory = result[agent_executor.output_key]
         trajectories.append(trajectory)
 
@@ -30,7 +36,8 @@ def parallel_scaling(query: str, k: int, reasoning_bank: ReasoningBank, agent_ex
     # 4. Synthesize a final answer from the generated trajectories.
     trajectories_str = "\n---\n".join(trajectories)
     synthesis_prompt = f"""
-    Given the following query and {k} proposed trajectories, select the best one or synthesize a final answer.
+    Given the following query and {k} proposed trajectories, select the best
+    one or synthesize a final answer.
 
     Query: {query}
 
@@ -40,7 +47,10 @@ def parallel_scaling(query: str, k: int, reasoning_bank: ReasoningBank, agent_ex
     final_answer = reasoning_bank.llm.invoke(synthesis_prompt)
     return final_answer
 
-def sequential_scaling(query: str, k: int, reasoning_bank: ReasoningBank, agent_executor: AgentExecutor) -> str:
+
+def sequential_scaling(
+    query: str, k: int, reasoning_bank: ReasoningBank, agent_executor: AgentExecutor
+) -> str:
     """
     Implements sequential scaling MaTTS.
     Iteratively refines a single trajectory k times.
@@ -54,7 +64,8 @@ def sequential_scaling(query: str, k: int, reasoning_bank: ReasoningBank, agent_
         # 2. Run the agent for one step of refinement.
         # The agent is prompted to refine the existing trajectory.
         refinement_prompt = f"""
-        Based on the following memories, refine the current trajectory to better answer the query.
+        Based on the following memories, refine the current trajectory to
+        better answer the query.
 
         Memories:
         {formatted_memories}
@@ -70,9 +81,10 @@ def sequential_scaling(query: str, k: int, reasoning_bank: ReasoningBank, agent_
         # A more sophisticated implementation might use a single agent
         # that can handle both initial generation and refinement.
         refinement_agent = create_agent_executor(reasoning_bank.llm)
-        result = refinement_agent.invoke({"memories": formatted_memories, "query": refinement_prompt})
+        result = refinement_agent.invoke(
+            {"memories": formatted_memories, "query": refinement_prompt}
+        )
         trajectory = result[refinement_agent.output_key]
-
 
     # 3. Add the final trajectory to the ReasoningBank.
     reasoning_bank.add_experience(trajectory, query)

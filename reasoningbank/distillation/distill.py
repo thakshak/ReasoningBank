@@ -1,3 +1,5 @@
+"""Distillation functions for processing agent trajectories."""
+
 from typing import List, Dict, Any
 import json
 
@@ -6,9 +8,22 @@ import json
 # for example, a LangChain BaseLanguageModel.
 LLM = Any
 
+
 def judge_trajectory(trajectory: str, query: str, llm: LLM) -> bool:
     """
     Judges whether a trajectory was successful or not using an LLM.
+
+    This function sends a prompt to a language model to evaluate if the given
+    trajectory successfully addresses the query. It is a simple binary
+    classification (Success/Failure).
+
+    Args:
+        trajectory (str): The sequence of actions and observations from the agent.
+        query (str): The initial task or question for the agent.
+        llm (LLM): The language model to use for the judgment.
+
+    Returns:
+        bool: True if the trajectory is judged as successful, False otherwise.
     """
     prompt = f"""
     Given the following query and trajectory, determine if the trajectory successfully addresses the query.
@@ -22,9 +37,27 @@ def judge_trajectory(trajectory: str, query: str, llm: LLM) -> bool:
     response = llm.invoke(prompt)
     return "success" in response.lower()
 
-def distill_trajectory(trajectory: str, query: str, llm: LLM, is_success: bool) -> List[Dict]:
+
+def distill_trajectory(
+    trajectory: str, query: str, llm: LLM, is_success: bool
+) -> List[Dict]:
     """
     Distills a raw trajectory into a list of structured memory items.
+
+    Based on whether the trajectory was successful, this function prompts the
+    language model to extract key reasoning steps, strategies, or lessons learned.
+    The output is expected to be a JSON string representing a list of memory items.
+
+    Args:
+        trajectory (str): The agent's trajectory.
+        query (str): The initial query.
+        llm (LLM): The language model for distillation.
+        is_success (bool): Whether the trajectory was successful.
+
+    Returns:
+        List[Dict]: A list of distilled memory items, each with a title,
+                    description, and content. Returns an empty list if
+                    the LLM response cannot be parsed.
     """
     if is_success:
         prompt = f"""

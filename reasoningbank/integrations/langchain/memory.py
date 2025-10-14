@@ -1,6 +1,7 @@
 from langchain_core.memory import BaseMemory
 from typing import Dict, Any, List
-from reasoningbank.bank import ReasoningBank
+from reasoningbank.core.bank import ReasoningBank
+
 
 class ReasoningBankMemory(BaseMemory):
     """A LangChain memory class that uses the ReasoningBank."""

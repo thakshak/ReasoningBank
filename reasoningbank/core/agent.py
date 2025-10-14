@@ -1,12 +1,24 @@
+"""Agent-related functionalities for the ReasoningBank library."""
+
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_core.language_models.base import BaseLanguageModel
 from typing import List, Dict
 
+
 def create_agent_executor(llm: BaseLanguageModel) -> LLMChain:
     """
     Creates a simple agent executor for generating trajectories.
-    This is a basic LLMChain that responds to a query based on provided memories.
+
+    This function sets up a basic LLMChain that takes a set of memories and a query,
+    and generates a response that represents the agent's thought process or trajectory.
+    This is intended for demonstration and testing purposes.
+
+    Args:
+        llm (BaseLanguageModel): An instance of a LangChain compatible language model.
+
+    Returns:
+        LLMChain: A LangChain LLMChain configured to generate trajectories.
     """
     template = """
     You are a helpful assistant.
@@ -27,14 +39,23 @@ def create_agent_executor(llm: BaseLanguageModel) -> LLMChain:
     # would use the LangChain Expression Language (LCEL).
     return LLMChain(llm=llm, prompt=prompt)
 
+
 def format_memories_for_prompt(memories: List[Dict]) -> str:
     """
-    Formats a list of memory dictionaries into a string for the prompt.
+    Formats a list of memory dictionaries into a string suitable for a prompt.
+
+    Args:
+        memories (List[Dict]): A list of memory dictionaries, where each dictionary
+            is expected to have 'title', 'description', and 'content' keys.
+
+    Returns:
+        str: A formatted string of memories, or a message indicating that no
+             relevant memories were found.
     """
     if not memories:
         return "No relevant memories found."
 
     return "\n---\n".join(
-        f"Title: {m.get('title', 'N/A')}\nDescription: {m.get('description', 'N/A')}\nContent: {m.get('content', 'N/A')}"
+        f"Title: {m.get('metadata', {}).get('title', 'N/A')}\nDescription: {m.get('metadata', {}).get('description', 'N/A')}\nContent: {m.get('document', 'N/A')}"
         for m in memories
     )
