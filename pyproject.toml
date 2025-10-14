@@ -1,0 +1,21 @@
+[project]
+name = "reasoningbank"
+version = "0.0.1"
+authors = [
+    { name="Jules", email="jules@example.com" },
+]
+description = "A Python library for implementing the ReasoningBank memory framework."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "chromadb",
+    "sentence-transformers",
+    "langchain",
+    "numpy",
+    "scikit-learn",
+]
