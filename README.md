@@ -10,14 +10,14 @@ This library is an implementation of the concepts presented in the research pape
 -   **Learns from Success and Failure:** Captures both effective strategies from successful attempts and preventative lessons from failures.
 -   **Pluggable Memory Backend:** Comes with a `ChromaMemoryBackend` for persistent, embedding-based memory, and a simple `JSONMemoryBackend` for testing.
 -   **LangChain Integration:** Provides a `ReasoningBankMemory` class for seamless integration with the LangChain framework.
--   **Memory-aware Test-Time Scaling (MaTTS):** Includes (placeholder) implementations of parallel and sequential scaling to enhance agent learning.
+-   **Memory-aware Test-Time Scaling (MaTTS):** Includes implementations of parallel and sequential scaling to enhance agent learning.
 
 ## Installation
 
 You can install ReasoningBank and its dependencies using pip:
 
 ```bash
-pip install chromadb sentence-transformers langchain
+pip install chromadb sentence-transformers langchain numpy scikit-learn
 ```
 
 ## Usage
@@ -38,7 +38,7 @@ embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 # Use a mock LLM for this example
 llm = FakeListLLM(responses=[
     "Success",
-    "[{'title': 'Example Strategy', 'description': 'A good way to do things.', 'content': 'Do this, then that.'}]"
+    '[{"title": "Example Strategy", "description": "A good way to do things.", "content": "Do this, then that."}]'
 ])
 
 # 2. Create the ReasoningBank
@@ -83,4 +83,29 @@ chain.invoke({"input": "What is the capital of France?"})
 
 # A subsequent call with a similar query will load the relevant memories
 chain.invoke({"input": "What is the main city in France?"})
+```
+
+### Memory-aware Test-Time Scaling (MaTTS)
+
+You can use the MaTTS functions to generate multiple trajectories and enhance learning.
+
+```python
+from reasoningbank.matts import parallel_scaling, sequential_scaling
+from reasoningbank.agent import create_agent_executor
+from langchain_community.llms.fake import FakeListLLM
+
+# (Set up bank, memory_backend, embedding_model as in the first example)
+
+# Use a mock LLM for the agent
+agent_llm = FakeListLLM(responses=["trajectory 1", "trajectory 2", "synthesized answer"])
+agent_executor = create_agent_executor(agent_llm)
+
+# Use parallel scaling to generate 2 trajectories
+final_answer = parallel_scaling(
+    query="test query",
+    k=2,
+    reasoning_bank=bank,
+    agent_executor=agent_executor
+)
+print(final_answer)
 ```

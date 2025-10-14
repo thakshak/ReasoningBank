@@ -93,5 +93,71 @@ class TestLangChainIntegration(unittest.TestCase):
         # The final answer should be what we mocked
         self.assertEqual(result['text'], "Final answer based on memory")
 
+from reasoningbank.matts import parallel_scaling, sequential_scaling
+from reasoningbank.agent import create_agent_executor
+
+class TestMaTTSIntegration(unittest.TestCase):
+
+    def setUp(self):
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.memory_backend = ChromaMemoryBackend(collection_name="matts_test_collection")
+        self.mock_llm = MagicMock(spec=BaseLanguageModel)
+
+        self.bank = ReasoningBank(
+            memory_backend=self.memory_backend,
+            embedding_model=self.embedding_model,
+            llm=self.mock_llm
+        )
+
+        self.agent_executor = create_agent_executor(self.mock_llm)
+
+    def tearDown(self):
+        self.memory_backend.client.delete_collection(name="matts_test_collection")
+
+    def test_parallel_scaling(self):
+        k = 2
+        # Mock the LLM calls
+        # Calls from `add_experience` and the final synthesis
+        self.mock_llm.invoke.side_effect = [
+            "Success", '[]', # add_experience for trajectory 1
+            "Success", '[]', # add_experience for trajectory 2
+            "synthesized answer", # Synthesis call
+        ]
+        # Calls from the LLMChain agent executor
+        self.mock_llm.generate_prompt.side_effect = [
+            LLMResult(generations=[[Generation(text="trajectory 1")]]),
+            LLMResult(generations=[[Generation(text="trajectory 2")]]),
+        ]
+
+        final_answer = parallel_scaling("test query", k, self.bank, self.agent_executor)
+
+        self.assertEqual(final_answer, "synthesized answer")
+        # add_experience is called k times (2 invokes each) + 1 for synthesis
+        self.assertEqual(self.mock_llm.invoke.call_count, k * 2 + 1)
+        # The agent executor is called k times
+        self.assertEqual(self.mock_llm.generate_prompt.call_count, k)
+
+    def test_sequential_scaling(self):
+        k = 2
+        # Mock the LLM calls
+        # Calls from `add_experience`
+        self.mock_llm.invoke.side_effect = [
+            "Success", '[]',
+        ]
+        # Calls from the LLMChain agent executor
+        self.mock_llm.generate_prompt.side_effect = [
+            LLMResult(generations=[[Generation(text="refined trajectory 1")]]),
+            LLMResult(generations=[[Generation(text="refined trajectory 2")]]),
+        ]
+
+        final_trajectory = sequential_scaling("test query", k, self.bank, self.agent_executor)
+
+        self.assertEqual(final_trajectory, "refined trajectory 2")
+        # add_experience is called once (2 invokes)
+        self.assertEqual(self.mock_llm.invoke.call_count, 2)
+        # The refinement agent is called k times
+        self.assertEqual(self.mock_llm.generate_prompt.call_count, k)
+
+
 if __name__ == '__main__':
     unittest.main()
