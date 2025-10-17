@@ -23,6 +23,8 @@ embedding_model:
 
 # LLM settings
 llm:
-  # The type of LLM to use. This is a placeholder for a more complex configuration.
-  # In a real application, this would contain settings for the specific LLM provider.
-  provider: "langchain.llms.Fake"
+  # The LLM provider to use. Options: "ollama", "langchain.llms.Fake"
+  provider: "ollama"
+
+  # The model to use, if the provider is "ollama"
+  model: "gemma3:270m"

@@ -82,7 +82,11 @@ class ReasoningBank:
         # In a real application, this would involve loading the specified LLM
         # from a library like LangChain.
         provider = self.config["llm"]["provider"]
-        if provider == "langchain.llms.Fake":
+        if provider == "ollama":
+            from langchain_community.llms import Ollama
+
+            return Ollama(model=self.config["llm"]["model"])
+        elif provider == "langchain.llms.Fake":
             # For demonstration purposes, we use a fake LLM.
             responses = [
                 "Success",
