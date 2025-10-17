@@ -1,7 +1,8 @@
-chromadb
+chromadb==0.4.15
 sentence-transformers
 langchain
 numpy
 scikit-learn
 PyYAML
 langchain-community
+posthog==3.0.0
