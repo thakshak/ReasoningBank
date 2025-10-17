@@ -7,7 +7,7 @@ from ..utils.config import load_config
 from ..memory.chroma import ChromaMemoryBackend
 from ..memory.json import JSONMemoryBackend
 from sentence_transformers import SentenceTransformer
-from langchain.llms.fake import FakeListLLM
+from langchain_community.llms import FakeListLLM
 
 # Placeholder for a generic Embedding Model interface.
 # The user would provide a model with an `embed_documents` method.
