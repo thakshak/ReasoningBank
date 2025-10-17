@@ -15,11 +15,16 @@ memory:
 
 # Embedding model settings
 embedding_model:
-  # The name of the sentence-transformer model to use.
-  model_name: "all-MiniLM-L6-v2"
+  # The embedding model to use. Options: "gemini-embedding-001", "sentence-transformers"
+  model_name: "embeddinggemma:300m"
+  
+  # The name of the sentence-transformer model to use, if model_name is "sentence-transformers"
+  st_model_name: "all-MiniLM-L6-v2"
 
 # LLM settings
 llm:
-  # The type of LLM to use. This is a placeholder for a more complex configuration.
-  # In a real application, this would contain settings for the specific LLM provider.
-  provider: "langchain.llms.Fake"
+  # The LLM provider to use. Options: "ollama", "langchain.llms.Fake"
+  provider: "ollama"
+
+  # The model to use, if the provider is "ollama"
+  model: "gemma3:270m"

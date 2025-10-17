@@ -16,17 +16,25 @@ class ReasoningBankMemory(BaseMemory):
 
     def load_memory_variables(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Load the memory variables."""
+        import json
+
         # We'll use the first key in the inputs dict as the query.
         # This is a simplification; a more robust implementation might
         # have a more explicit way of defining the query.
         query = next(iter(inputs.values()))
 
-        retrieved_memories = self.reasoning_bank.retrieve_memories(query, k=1)
+        retrieved_experiences = self.reasoning_bank.retrieve_memories(query, k=1)
+
+        all_distilled_items = []
+        for experience in retrieved_experiences:
+            # distilled_items is a JSON string, so we need to parse it.
+            distilled_items = json.loads(experience.get("distilled_items", "[]"))
+            all_distilled_items.extend(distilled_items)
 
         # Format the memories into a string for the prompt.
-        formatted_memories = "\n".join(
-            f"Title: {m['title']}\nDescription: {m['description']}\nContent: {m['content']}"
-            for m in retrieved_memories
+        formatted_memories = "\n---\n".join(
+            f"Title: {item['title']}\nDescription: {item['description']}\nContent: {item['content']}"
+            for item in all_distilled_items
         )
 
         return {self.memory_key: formatted_memories}

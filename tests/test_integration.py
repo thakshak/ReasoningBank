@@ -20,7 +20,10 @@ class TestReasoningBankIntegration(unittest.TestCase):
                 "backend": "chroma",
                 "chroma": {"collection_name": "integration_test_collection"},
             },
-            "embedding_model": {"model_name": "all-MiniLM-L6-v2"},
+            "embedding_model": {
+                "model_name": "sentence-transformers",
+                "st_model_name": "all-MiniLM-L6-v2",
+            },
             "llm": {"provider": "langchain.llms.Fake"},
         }
         self.bank = ReasoningBank(config_path="dummy_config.yaml")
@@ -58,8 +61,9 @@ class TestReasoningBankIntegration(unittest.TestCase):
         )
 
         self.assertEqual(len(retrieved_memories), 1)
-        self.assertEqual(retrieved_memories[0]["title"], "Test Title")
-        self.assertEqual(retrieved_memories[0]["content"], "This is a test.")
+        self.assertEqual(retrieved_memories[0]["query"], "query")
+        distilled_items = json.loads(retrieved_memories[0]["distilled_items"])
+        self.assertEqual(distilled_items[0]["title"], "Test Title")
 
 
 class TestLangChainIntegration(unittest.TestCase):
@@ -71,7 +75,10 @@ class TestLangChainIntegration(unittest.TestCase):
                 "backend": "chroma",
                 "chroma": {"collection_name": "langchain_test_collection"},
             },
-            "embedding_model": {"model_name": "all-MiniLM-L6-v2"},
+            "embedding_model": {
+                "model_name": "sentence-transformers",
+                "st_model_name": "all-MiniLM-L6-v2",
+            },
             "llm": {"provider": "langchain.llms.Fake"},
         }
         self.bank = ReasoningBank(config_path="dummy_config.yaml")
@@ -127,12 +134,9 @@ class TestLangChainIntegration(unittest.TestCase):
 
         result = chain.invoke({"input": "another langchain query"})
 
-        self.assertIn(
-            "Chain Title",
-            self.memory.load_memory_variables(
-                {"input": "another langchain query"}
-            )["history"],
-        )
+        # Check that the memory was loaded and included in the prompt to the LLM
+        called_prompts = self.mock_llm.generate_prompt.call_args[0][0]
+        self.assertIn("Chain Title", called_prompts[0].to_string())
         self.assertEqual(result["text"], "Final answer based on memory")
 
 
@@ -145,7 +149,10 @@ class TestMaTTSIntegration(unittest.TestCase):
                 "backend": "chroma",
                 "chroma": {"collection_name": "matts_test_collection"},
             },
-            "embedding_model": {"model_name": "all-MiniLM-L6-v2"},
+            "embedding_model": {
+                "model_name": "sentence-transformers",
+                "st_model_name": "all-MiniLM-L6-v2",
+            },
             "llm": {"provider": "langchain.llms.Fake"},
         }
         self.bank = ReasoningBank(config_path="dummy_config.yaml")
