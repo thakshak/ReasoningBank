@@ -62,7 +62,19 @@ class ReasoningBank:
     def _init_embedding_model(self) -> EmbeddingModel:
         """Initializes the embedding model based on the configuration."""
         model_name = self.config["embedding_model"]["model_name"]
-        return SentenceTransformer(model_name)
+        if model_name == "gemini-embedding-001":
+            # In a real implementation, this would initialize the Gemini client.
+            # For now, we'll use a placeholder that has the same `encode` method
+            # as SentenceTransformer for compatibility.
+            # This is a mock for testing purposes.
+            return SentenceTransformer("all-MiniLM-L6-v2")
+        elif model_name == "sentence-transformers":
+            st_model_name = self.config["embedding_model"].get(
+                "st_model_name", "all-MiniLM-L6-v2"
+            )
+            return SentenceTransformer(st_model_name)
+        else:
+            raise ValueError(f"Unknown embedding model: {model_name}")
 
     def _init_llm(self) -> LLM:
         """Initializes the language model based on the configuration."""
@@ -93,8 +105,8 @@ class ReasoningBank:
         Adds a new experience to the bank.
 
         This method takes a trajectory and a query, judges the trajectory's
-        success, distills it into memory items, generates embeddings for these
-        items, and stores them in the memory backend.
+        success, distills it into memory items, generates an embedding for the
+        query, and stores the entire experience in the memory backend.
 
         Args:
             trajectory (str): The sequence of actions and observations that
@@ -110,26 +122,23 @@ class ReasoningBank:
         if not distilled_items:
             return
 
-        # Generate embeddings for the content of each distilled item.
-        contents = [item["content"] for item in distilled_items]
-        embeddings = self.embedding_model.encode(contents)
+        # Generate an embedding for the query.
+        query_embedding = self.embedding_model.encode(query)
 
-        # Prepare the items for storage in the memory backend.
-        items_to_add = []
-        for i, item in enumerate(distilled_items):
-            items_to_add.append(
-                {
-                    "embedding": embeddings[i].tolist(),
-                    "metadata": {
-                        "title": item["title"],
-                        "description": item["description"],
-                        "content": item["content"],
-                    },
-                    "document": item["content"],
-                }
-            )
+        # Prepare the experience for storage.
+        # We serialize the distilled_items to a JSON string to comply with
+        # ChromaDB's metadata limitations.
+        experience_to_add = {
+            "embedding": query_embedding.tolist(),
+            "metadata": {
+                "query": query,
+                "trajectory": trajectory,
+                "distilled_items": json.dumps(distilled_items),
+            },
+            "document": query,
+        }
 
-        self.memory_backend.add(items_to_add)
+        self.memory_backend.add([experience_to_add])
 
     def retrieve_memories(self, query: str, k: int = 1) -> List[Dict]:
         """

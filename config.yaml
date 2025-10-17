@@ -15,8 +15,11 @@ memory:
 
 # Embedding model settings
 embedding_model:
-  # The name of the sentence-transformer model to use.
-  model_name: "all-MiniLM-L6-v2"
+  # The embedding model to use. Options: "gemini-embedding-001", "sentence-transformers"
+  model_name: "gemini-embedding-001"
+
+  # The name of the sentence-transformer model to use, if model_name is "sentence-transformers"
+  st_model_name: "all-MiniLM-L6-v2"
 
 # LLM settings
 llm:
