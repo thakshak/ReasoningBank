@@ -1,4 +1,4 @@
-from langchain_core.memory import BaseMemory
+from langchain_classic.base_memory import BaseMemory
 from typing import Dict, Any, List
 from reasoningbank.core.bank import ReasoningBank
 

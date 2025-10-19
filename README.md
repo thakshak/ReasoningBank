@@ -12,6 +12,51 @@ This library is an implementation of the concepts presented in the research pape
 -   **LangChain Integration:** Provides a `ReasoningBankMemory` class for seamless integration with the LangChain framework.
 -   **Memory-aware Test-Time Scaling (MaTTS):** Includes implementations of parallel and sequential scaling to enhance agent learning.
 
+## Configuration
+
+ReasoningBank can be configured using a `config.yaml` file in the root of your project. This allows you to easily switch between different models and backends. A utility function `reasoningbank.utils.config.load_config` is provided to load these settings.
+
+Here is an example `config.yaml`:
+
+```yaml
+# Default configuration for the ReasoningBank library
+
+# Memory backend settings
+memory:
+  # The type of memory backend to use. Options: "chroma", "json"
+  backend: "chroma"
+
+  # Settings for the ChromaDB backend
+  chroma:
+    collection_name: "reasoning_bank"
+
+  # Settings for the JSON backend
+  json:
+    filepath: "memory.json"
+
+# Embedding model settings
+embedding_model:
+  # The embedding model to use. Options: "gemini-embedding-001", "sentence-transformers"
+  model_name: "embeddinggemma:300m"
+
+  # The name of the sentence-transformer model to use, if model_name is "sentence-transformers"
+  st_model_name: "all-MiniLM-L6-v2"
+
+# LLM settings
+llm:
+  # The LLM provider to use. Options: "ollama", "langchain.llms.Fake"
+  provider: "ollama"
+
+  # The model to use, if the provider is "ollama"
+  model: "gemma3:270m"
+```
+
+### Key Configuration Options:
+
+-   **`memory.backend`**: Choose between `chroma` for a persistent, vector-based memory, or `json` for a simple file-based memory.
+-   **`embedding_model.model_name`**: Specify the embedding model.
+-   **`llm.provider`**: Define the LLM to be used for distillation and synthesis. Supports `ollama` for local models.
+
 ## Installation
 
 You can install ReasoningBank and its dependencies using pip:
@@ -22,38 +67,41 @@ pip install chromadb sentence-transformers langchain numpy scikit-learn
 
 ## Usage
 
+The following examples assume you have a `config.yaml` file in your project's root directory.
+
 ### Standalone ReasoningBank
 
-Here's how to use the `ReasoningBank` class on its own:
+Here's how to use the `ReasoningBank` class, initializing its components based on your `config.yaml`:
 
 ```python
 from reasoningbank.bank import ReasoningBank
+from reasoningbank.utils.config import load_config
 from reasoningbank.memory import ChromaMemoryBackend
 from sentence_transformers import SentenceTransformer
-from langchain_community.llms.fake import FakeListLLM
+from langchain_community.llms import Ollama
 
-# 1. Set up the components
-memory_backend = ChromaMemoryBackend(collection_name="my_agent_memory")
-embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-# Use a mock LLM for this example
-llm = FakeListLLM(responses=[
-    "Success",
-    '[{"title": "Example Strategy", "description": "A good way to do things.", "content": "Do this, then that."}]'
-])
+# 1. Load configuration
+config = load_config()
 
-# 2. Create the ReasoningBank
+# 2. Initialize components based on the configuration
+#    (In a real application, you might use a factory pattern for this)
+memory_backend = ChromaMemoryBackend(**config['memory']['chroma'])
+embedding_model = SentenceTransformer(config['embedding_model']['st_model_name'])
+llm = Ollama(**config['llm'])
+
+# 3. Create the ReasoningBank
 bank = ReasoningBank(
     memory_backend=memory_backend,
     embedding_model=embedding_model,
     llm=llm
 )
 
-# 3. Add an experience
+# 4. Add an experience
 trajectory = "Agent did this... and it worked."
 query = "How to do the thing?"
 bank.add_experience(trajectory, query)
 
-# 4. Retrieve memories for a new query
+# 5. Retrieve memories for a new query
 retrieved_memories = bank.retrieve_memories("a similar query", k=1)
 print(retrieved_memories)
 ```
@@ -67,7 +115,7 @@ from reasoningbank.integrations.langchain.memory import ReasoningBankMemory
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 
-# (Set up bank, memory_backend, embedding_model, llm as in the previous example)
+# (Set up bank as in the previous example)
 
 # 1. Create the ReasoningBankMemory
 memory = ReasoningBankMemory(reasoning_bank=bank)
@@ -94,7 +142,7 @@ from reasoningbank.matts import parallel_scaling, sequential_scaling
 from reasoningbank.agent import create_agent_executor
 from langchain_community.llms.fake import FakeListLLM
 
-# (Set up bank, memory_backend, embedding_model as in the first example)
+# (Set up bank as in the previous example)
 
 # Use a mock LLM for the agent
 agent_llm = FakeListLLM(responses=["trajectory 1", "trajectory 2", "synthesized answer"])

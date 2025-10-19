@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import MagicMock, patch
 from reasoningbank import ReasoningBank
 from reasoningbank.integrations.langchain.memory import ReasoningBankMemory
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
+from langchain_classic.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
 from langchain_core.language_models.base import BaseLanguageModel
 from langchain_core.outputs import LLMResult, Generation
 import json
