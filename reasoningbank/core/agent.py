@@ -1,7 +1,7 @@
 """Agent-related functionalities for the ReasoningBank library."""
 
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
+from langchain_classic.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
 from langchain_core.language_models.base import BaseLanguageModel
 from typing import List, Dict
 
