@@ -6,4 +6,3 @@ scikit-learn
 PyYAML
 langchain-community
 posthog==3.0.0
-langchain_classic
