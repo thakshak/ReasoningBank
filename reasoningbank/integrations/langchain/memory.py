@@ -1,13 +1,15 @@
-from langchain_classic.base_memory import BaseMemory
 from typing import Dict, Any, List
 from reasoningbank.core.bank import ReasoningBank
 
 
-class ReasoningBankMemory(BaseMemory):
+class ReasoningBankMemory:
     """A LangChain memory class that uses the ReasoningBank."""
 
     reasoning_bank: ReasoningBank
     memory_key: str = "history"  # The key for the memory variables.
+
+    def __init__(self, reasoning_bank: ReasoningBank):
+        self.reasoning_bank = reasoning_bank
 
     @property
     def memory_variables(self) -> List[str]:
