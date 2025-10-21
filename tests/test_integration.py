@@ -2,10 +2,10 @@ import unittest
 from unittest.mock import MagicMock, patch
 from reasoningbank import ReasoningBank
 from reasoningbank.integrations.langchain.memory import ReasoningBankMemory
-from langchain_classic.chains import LLMChain
 from langchain_core.prompts import PromptTemplate
 from langchain_core.language_models.base import BaseLanguageModel
 from langchain_core.outputs import LLMResult, Generation
+from langchain_core.output_parsers import StrOutputParser
 import json
 from reasoningbank.core.matts import parallel_scaling, sequential_scaling
 from reasoningbank.core.agent import create_agent_executor
@@ -105,20 +105,8 @@ class TestLangChainIntegration(unittest.TestCase):
                     }
                 ]
             ),
-            "Success",
-            json.dumps(
-                [
-                    {
-                        "title": "Another Title",
-                        "description": "Another Description",
-                        "content": "Another content.",
-                    }
-                ]
-            ),
+            "Final answer based on memory",
         ]
-        generation = Generation(text="Final answer based on memory")
-        llm_result = LLMResult(generations=[[generation]])
-        self.mock_llm.generate_prompt.return_value = llm_result
 
         self.memory.save_context(
             {"input": "langchain query"}, {"output": "langchain trajectory"}
@@ -130,14 +118,14 @@ class TestLangChainIntegration(unittest.TestCase):
         prompt = PromptTemplate(
             input_variables=["history", "input"], template=template
         )
-        chain = LLMChain(llm=self.mock_llm, prompt=prompt, memory=self.memory)
 
-        result = chain.invoke({"input": "another langchain query"})
+        chain = prompt | self.mock_llm | StrOutputParser()
+
+        result = chain.invoke({"input": "another langchain query", "history": self.memory.load_memory_variables({"input": "another langchain query"})["history"]})
 
         # Check that the memory was loaded and included in the prompt to the LLM
-        called_prompts = self.mock_llm.generate_prompt.call_args[0][0]
-        self.assertIn("Chain Title", called_prompts[0].to_string())
-        self.assertEqual(result["text"], "Final answer based on memory")
+        self.assertIn("Chain Title", self.mock_llm.invoke.call_args[0][0].to_string())
+        self.assertEqual(result, "Final answer based on memory")
 
 
 class TestMaTTSIntegration(unittest.TestCase):
@@ -168,15 +156,13 @@ class TestMaTTSIntegration(unittest.TestCase):
     def test_parallel_scaling(self):
         k = 2
         self.mock_llm.invoke.side_effect = [
+            "trajectory 1",
             "Success",
             "[]",
+            "trajectory 2",
             "Success",
             "[]",
             "synthesized answer",
-        ]
-        self.mock_llm.generate_prompt.side_effect = [
-            LLMResult(generations=[[Generation(text="trajectory 1")]]),
-            LLMResult(generations=[[Generation(text="trajectory 2")]]),
         ]
 
         final_answer = parallel_scaling(
@@ -186,10 +172,11 @@ class TestMaTTSIntegration(unittest.TestCase):
 
     def test_sequential_scaling(self):
         k = 2
-        self.mock_llm.invoke.side_effect = ["Success", "[]"]
-        self.mock_llm.generate_prompt.side_effect = [
-            LLMResult(generations=[[Generation(text="refined trajectory 1")]]),
-            LLMResult(generations=[[Generation(text="refined trajectory 2")]]),
+        self.mock_llm.invoke.side_effect = [
+            "refined trajectory 1",
+            "refined trajectory 2",
+            "Success",
+            "[]",
         ]
         final_trajectory = sequential_scaling(
             "test query", k, self.bank, self.agent_executor

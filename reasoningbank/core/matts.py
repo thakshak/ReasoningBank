@@ -23,10 +23,9 @@ def parallel_scaling(
     # In a real implementation, this could be done with asyncio or threading.
     trajectories = []
     for _ in range(k):
-        result = agent_executor.invoke(
+        trajectory = agent_executor.invoke(
             {"memories": formatted_memories, "query": query}
         )
-        trajectory = result[agent_executor.output_key]
         trajectories.append(trajectory)
 
     # 3. Add the new experiences to the ReasoningBank to learn from them.
@@ -81,10 +80,9 @@ def sequential_scaling(
         # A more sophisticated implementation might use a single agent
         # that can handle both initial generation and refinement.
         refinement_agent = create_agent_executor(reasoning_bank.llm)
-        result = refinement_agent.invoke(
+        trajectory = refinement_agent.invoke(
             {"memories": formatted_memories, "query": refinement_prompt}
         )
-        trajectory = result[refinement_agent.output_key]
 
     # 3. Add the final trajectory to the ReasoningBank.
     reasoning_bank.add_experience(trajectory, query)

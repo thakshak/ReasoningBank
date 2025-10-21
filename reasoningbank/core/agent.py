@@ -1,16 +1,17 @@
 """Agent-related functionalities for the ReasoningBank library."""
 
-from langchain_classic.chains import LLMChain
 from langchain_core.prompts import PromptTemplate
 from langchain_core.language_models.base import BaseLanguageModel
+from langchain_core.runnables import RunnableSequence
+from langchain_core.output_parsers import StrOutputParser
 from typing import List, Dict
 
 
-def create_agent_executor(llm: BaseLanguageModel) -> LLMChain:
+def create_agent_executor(llm: BaseLanguageModel) -> RunnableSequence:
     """
     Creates a simple agent executor for generating trajectories.
 
-    This function sets up a basic LLMChain that takes a set of memories and a query,
+    This function sets up a basic chain that takes a set of memories and a query,
     and generates a response that represents the agent's thought process or trajectory.
     This is intended for demonstration and testing purposes.
 
@@ -18,7 +19,7 @@ def create_agent_executor(llm: BaseLanguageModel) -> LLMChain:
         llm (BaseLanguageModel): An instance of a LangChain compatible language model.
 
     Returns:
-        LLMChain: A LangChain LLMChain configured to generate trajectories.
+        RunnableSequence: A LangChain RunnableSequence configured to generate trajectories.
     """
     template = """
     You are a helpful assistant.
@@ -34,10 +35,7 @@ def create_agent_executor(llm: BaseLanguageModel) -> LLMChain:
     """
     prompt = PromptTemplate(input_variables=["memories", "query"], template=template)
 
-    # Note: LLMChain is deprecated, but we use it here for simplicity
-    # to match the existing test structure. A production implementation
-    # would use the LangChain Expression Language (LCEL).
-    return LLMChain(llm=llm, prompt=prompt)
+    return prompt | llm | StrOutputParser()
 
 
 def format_memories_for_prompt(memories: List[Dict]) -> str:
