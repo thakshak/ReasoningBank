@@ -12,6 +12,43 @@ This library is an implementation of the concepts presented in the research pape
 -   **LangChain Integration:** Provides a `ReasoningBankMemory` class for seamless integration with the LangChain framework.
 -   **Memory-aware Test-Time Scaling (MaTTS):** Includes implementations of parallel and sequential scaling to enhance agent learning.
 
+## Getting Started
+
+Follow these steps to set up the project for local development.
+
+### 1. Clone the Repository
+
+First, clone the repository to your local machine:
+
+```bash
+git clone https://github.com/example/reasoningbank.git
+cd reasoningbank
+```
+
+### 2. Install Dependencies
+
+Install the required Python packages using the `requirements.txt` file:
+
+```bash
+pip install -r requirements.txt
+```
+
+For development, you may also want to install the tools for formatting and linting:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+### 3. Configure the Environment
+
+Copy the example configuration file to create your own local configuration:
+
+```bash
+cp config.yaml.example config.yaml
+```
+
+Then, edit `config.yaml` to match your desired settings. For example, you may need to specify the correct Ollama model or ChromaDB collection name.
+
 ## Configuration
 
 ReasoningBank can be configured using a `config.yaml` file in the root of your project. This allows you to easily switch between different models and backends. A utility function `reasoningbank.utils.config.load_config` is provided to load these settings.
@@ -59,11 +96,21 @@ llm:
 
 ## Installation
 
-You can install ReasoningBank and its dependencies using pip:
+There are two ways to install the library, depending on your use case.
+
+### For Users
+
+If you want to use the `reasoningbank` library in your own project, you can install it directly from this repository:
 
 ```bash
-pip install chromadb sentence-transformers langchain numpy scikit-learn
+pip install git+https://github.com/example/reasoningbank.git
 ```
+
+This will install the library and its dependencies.
+
+### For Developers
+
+If you want to contribute to the development of the library, you should clone the repository and install it in editable mode, as described in the "Getting Started" section.
 
 ## Usage
 
@@ -157,3 +204,18 @@ final_answer = parallel_scaling(
 )
 print(final_answer)
 ```
+
+## Running the Examples
+
+The `examples/` directory contains a simple script to demonstrate the basic functionality of the library.
+
+To run the example:
+
+1.  Make sure you have installed the dependencies as described in the "Getting Started" section.
+2.  Run the `simple_usage.py` script from the root of the repository:
+
+```bash
+python -m examples.simple_usage
+```
+
+This will run a simple demonstration of adding an experience to the memory bank and then retrieving it.
