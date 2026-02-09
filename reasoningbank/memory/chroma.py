@@ -39,11 +39,21 @@ class ChromaMemoryBackend(MemoryBackend):
         Args:
             items (List[Dict]): A list of memory items to add.
         """
+        ids = []
+        embeddings = []
+        metadatas = []
+        documents = []
+        for item in items:
+            ids.append(str(uuid.uuid4()))
+            embeddings.append(item["embedding"])
+            metadatas.append(item["metadata"])
+            documents.append(item["document"])
+
         self.collection.add(
-            ids=[str(uuid.uuid4()) for _ in items],
-            embeddings=[item["embedding"] for item in items],
-            metadatas=[item["metadata"] for item in items],
-            documents=[item["document"] for item in items],
+            ids=ids,
+            embeddings=embeddings,
+            metadatas=metadatas,
+            documents=documents,
         )
 
     def query(self, query_embedding: List[float], k: int) -> List[Dict]:
