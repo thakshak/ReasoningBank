@@ -47,12 +47,31 @@ class ReasoningBank:
 
     def _init_memory_backend(self) -> MemoryBackend:
         """Initializes the memory backend based on the configuration."""
+        if "memory" not in self.config:
+            raise ValueError("Missing 'memory' section in configuration")
+        if "backend" not in self.config["memory"]:
+            raise ValueError("Missing 'backend' key in 'memory' configuration")
+
         backend_type = self.config["memory"]["backend"]
         if backend_type == "chroma":
+            if (
+                "chroma" not in self.config["memory"]
+                or "collection_name" not in self.config["memory"]["chroma"]
+            ):
+                raise ValueError(
+                    "Missing 'collection_name' for 'chroma' backend"
+                )
             return ChromaMemoryBackend(
-                collection_name=self.config["memory"]["chroma"]["collection_name"]
+                collection_name=self.config["memory"]["chroma"][
+                    "collection_name"
+                ]
             )
         elif backend_type == "json":
+            if (
+                "json" not in self.config["memory"]
+                or "filepath" not in self.config["memory"]["json"]
+            ):
+                raise ValueError("Missing 'filepath' for 'json' backend")
             return JSONMemoryBackend(
                 filepath=self.config["memory"]["json"]["filepath"]
             )
@@ -61,6 +80,15 @@ class ReasoningBank:
 
     def _init_embedding_model(self) -> EmbeddingModel:
         """Initializes the embedding model based on the configuration."""
+        if "embedding_model" not in self.config:
+            raise ValueError(
+                "Missing 'embedding_model' section in configuration"
+            )
+        if "model_name" not in self.config["embedding_model"]:
+            raise ValueError(
+                "Missing 'model_name' key in 'embedding_model' configuration"
+            )
+
         model_name = self.config["embedding_model"]["model_name"]
         if model_name == "gemini-embedding-001":
             # In a real implementation, this would initialize the Gemini client.
@@ -78,11 +106,18 @@ class ReasoningBank:
 
     def _init_llm(self) -> LLM:
         """Initializes the language model based on the configuration."""
+        if "llm" not in self.config:
+            raise ValueError("Missing 'llm' section in configuration")
+        if "provider" not in self.config["llm"]:
+            raise ValueError("Missing 'provider' key in 'llm' configuration")
+
         # This is a placeholder for a more complex LLM initialization.
         # In a real application, this would involve loading the specified LLM
         # from a library like LangChain.
         provider = self.config["llm"]["provider"]
         if provider == "ollama":
+            if "model" not in self.config["llm"]:
+                raise ValueError("Missing 'model' key for 'ollama' provider")
             from langchain_community.llms import Ollama
 
             return Ollama(model=self.config["llm"]["model"])
