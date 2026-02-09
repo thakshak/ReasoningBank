@@ -1,30 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock
-import sys
-
-# Mock all external dependencies
-external_deps = [
-    "yaml",
-    "sentence_transformers",
-    "langchain_community",
-    "langchain_community.llms",
-    "langchain_core",
-    "langchain_core.prompts",
-    "langchain_core.output_parsers",
-    "langchain_core.runnables",
-    "langchain_core.language_models",
-    "langchain_core.language_models.base",
-    "chromadb",
-    "numpy",
-    "sklearn",
-    "sklearn.metrics",
-    "sklearn.metrics.pairwise",
-    "posthog"
-]
-
-for dep in external_deps:
-    sys.modules[dep] = MagicMock()
-
+from unittest.mock import patch
 from reasoningbank.core.bank import ReasoningBank
 
 class TestReasoningBankConfig(unittest.TestCase):
