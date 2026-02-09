@@ -1,6 +1,7 @@
 """ChromaDB memory backend."""
 
 import chromadb
+from chromadb.config import Settings
 from typing import List, Dict
 import uuid
 from .base import MemoryBackend
@@ -22,7 +23,7 @@ class ChromaMemoryBackend(MemoryBackend):
         Args:
             collection_name (str): The name of the ChromaDB collection to use.
         """
-        self.client = chromadb.Client()
+        self.client = chromadb.Client(Settings(anonymized_telemetry=False))
         self.collection = self.client.get_or_create_collection(
             name=collection_name
         )
