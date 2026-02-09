@@ -1,6 +1,8 @@
 from typing import Any
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from .bank import ReasoningBank
-from .agent import format_memories_for_prompt, create_agent_executor
+from .agent import format_memories_for_prompt
 
 # A placeholder for a generic agent execution function.
 # In a real implementation, this would be a proper agent class or function.
@@ -34,7 +36,7 @@ def parallel_scaling(
 
     # 4. Synthesize a final answer from the generated trajectories.
     trajectories_str = "\n---\n".join(trajectories)
-    synthesis_prompt = f"""
+    synthesis_template = """
     Given the following query and {k} proposed trajectories, select the best
     one or synthesize a final answer.
 
@@ -43,7 +45,11 @@ def parallel_scaling(
     Trajectories:
     {trajectories_str}
     """
-    final_answer = reasoning_bank.llm.invoke(synthesis_prompt)
+    synthesis_prompt = PromptTemplate.from_template(synthesis_template)
+    synthesis_chain = synthesis_prompt | reasoning_bank.llm | StrOutputParser()
+    final_answer = synthesis_chain.invoke(
+        {"query": query, "trajectories_str": trajectories_str, "k": k}
+    )
     return final_answer
 
 
@@ -62,12 +68,12 @@ def sequential_scaling(
 
         # 2. Run the agent for one step of refinement.
         # The agent is prompted to refine the existing trajectory.
-        refinement_prompt = f"""
+        refinement_template = """
         Based on the following memories, refine the current trajectory to
         better answer the query.
 
         Memories:
-        {formatted_memories}
+        {memories}
 
         Query: {query}
 
@@ -76,12 +82,14 @@ def sequential_scaling(
 
         Refined Trajectory:
         """
-        # We create a new agent executor for the refinement prompt.
-        # A more sophisticated implementation might use a single agent
-        # that can handle both initial generation and refinement.
-        refinement_agent = create_agent_executor(reasoning_bank.llm)
-        trajectory = refinement_agent.invoke(
-            {"memories": formatted_memories, "query": refinement_prompt}
+        refinement_prompt = PromptTemplate.from_template(refinement_template)
+        refinement_chain = refinement_prompt | reasoning_bank.llm | StrOutputParser()
+        trajectory = refinement_chain.invoke(
+            {
+                "memories": formatted_memories,
+                "query": query,
+                "trajectory": trajectory,
+            }
         )
 
     # 3. Add the final trajectory to the ReasoningBank.
